@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
+import 'add_schedule_screen.dart';
 
 class AddMedicationScreen extends StatefulWidget {
   const AddMedicationScreen({super.key});
@@ -71,18 +72,22 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       });
 
       if (response['status'] == 'success') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Medication added successfully'),
-              backgroundColor: AppColors.success,
-            ),
-          );
-          Navigator.pop(context);
-        }
-      } else {
-        setState(() => _errorMessage = response['message']);
-      }
+  final medicationId = response['data']['medication']['id'];
+  final medicationName = response['data']['medication']['name'];
+
+  if (mounted) {
+    // Go directly to schedule creation
+    await Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddScheduleScreen(
+          medicationId: medicationId,
+          medicationName: medicationName,
+        ),
+      ),
+    );
+  }
+}
     } catch (e) {
       setState(() => _errorMessage = 'Could not save medication.');
     } finally {

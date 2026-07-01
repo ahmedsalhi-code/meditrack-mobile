@@ -1,13 +1,9 @@
 // lib/services/api_service.dart
-// Every API call in the app goes through here.
-// One place to change the base URL, one place to handle errors.
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiService {
-  // Your live Railway URL
   static const String baseUrl =
       'https://meditrack-backend-production-1b17.up.railway.app';
 
@@ -108,6 +104,19 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
+  // ── SCHEDULES ──────────────────────────────────────────
+  static Future<Map<String, dynamic>> createSchedule({
+    required String medicationId,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/medications/$medicationId/schedules'),
+      headers: await _headers(),
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
+  }
+
   // ── ADHERENCE ──────────────────────────────────────────
   static Future<Map<String, dynamic>> getToday() async {
     final response = await http.get(
@@ -135,7 +144,14 @@ class ApiService {
     );
     return jsonDecode(response.body);
   }
+  static Future<Map<String, dynamic>> getHistory() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/adherence/history?limit=30'),
+      headers: await _headers(),
+    );
+    return jsonDecode(response.body);
 
+  }
   // ── AI ASSISTANT ───────────────────────────────────────
   static Future<Map<String, dynamic>> chat({
     required String message,

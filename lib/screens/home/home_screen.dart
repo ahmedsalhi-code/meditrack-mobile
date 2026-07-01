@@ -6,6 +6,7 @@ import '../auth/login_screen.dart';
 import '../medications/medications_screen.dart';
 import '../ai/ai_chat_screen.dart';
 import '../profile/profile_screen.dart';
+import '../adherence/adherence_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,6 +46,53 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _isLoading = false);
     }
   }
+  Future<void> _logDose(
+  Map<String, dynamic> schedule,
+  String action,
+) async {
+  try {
+    final response = await ApiService.logDose({
+      'schedule_id': schedule['schedule_id'],
+      'medication_id': schedule['medication_id'],
+      'action': action,
+      'scheduled_at': DateTime.now().toUtc().toIso8601String(),
+      'taken_at': action == 'taken'
+          ? DateTime.now().toUtc().toIso8601String()
+          : null,
+    });
+
+    if (response['status'] == 'success') {
+      // Show feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              action == 'taken'
+                  ? '✓ Dose logged — great job!'
+                  : 'Dose skipped.',
+            ),
+            backgroundColor: action == 'taken'
+                ? AppColors.success
+                : AppColors.textMuted,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Refresh the home screen data
+      await _loadData();
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not log dose. Please try again.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+}
 
   Future<void> _logout() async {
     await ApiService.clearTokens();
@@ -71,24 +119,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody() {
-    switch (_currentIndex) {
-      case 0:
-        return _buildHomeTab();
-      case 1:
+  switch (_currentIndex) {
+    case 0:
+      return _buildHomeTab();
+    case 1:
       return const MedicationsScreen();
-      case 2:
-          return const AiChatScreen();
-      case 3:
-        return const ProfileScreen();
-      case 4:
-        return _buildPlaceholder('Medications');
-      case 5:
-        return _buildPlaceholder('AI Assistant');
-      case 6:
-        return _buildPlaceholder('Profile');
-      default:
-        return _buildHomeTab();
-    }
+    case 2:
+      return const AdherenceScreen();
+    case 3:
+      return const AiChatScreen();
+    case 4:
+      return const ProfileScreen();
+    default:
+      return _buildHomeTab();
+   }
   }
 
   Widget _buildHomeTab() {
@@ -303,79 +347,169 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildScheduleCard(Map<String, dynamic> schedule) {
-    final action = schedule['action'];
-    final isTaken = action == 'taken';
-    final isMissed = action == 'missed';
+  final action = schedule['action'];
+  final isTaken = action == 'taken';
+  final isMissed = action == 'missed';
+  final isLogged = action != null;
 
-    Color statusColor = AppColors.textMuted;
-    IconData statusIcon = Icons.radio_button_unchecked;
-
-    if (isTaken) {
-      statusColor = AppColors.success;
-      statusIcon = Icons.check_circle_rounded;
-    } else if (isMissed) {
-      statusColor = AppColors.danger;
-      statusIcon = Icons.cancel_rounded;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardBorder),
+  return Container(
+    margin: const EdgeInsets.only(bottom: 10),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isTaken
+            ? AppColors.success.withOpacity(0.3)
+            : isMissed
+                ? AppColors.danger.withOpacity(0.3)
+                : AppColors.cardBorder,
       ),
-      child: Row(
-        children: [
-          // Medication icon
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(12),
+    ),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            // Medication icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isTaken
+                    ? AppColors.success.withOpacity(0.1)
+                    : AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.medication_rounded,
+                color: isTaken ? AppColors.success : AppColors.primary,
+                size: 22,
+              ),
             ),
-            child: const Icon(
-              Icons.medication_rounded,
-              color: AppColors.primary,
-              size: 22,
-            ),
-          ),
 
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          // Medication info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  schedule['medication_name'] ?? 'Medication',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
+            // Medication info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    schedule['medication_name'] ?? 'Medication',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${schedule['dosage']} ${schedule['unit']}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Status badge
+            if (isLogged)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${schedule['dosage']} ${schedule['unit']}',
-                  style: const TextStyle(
+                decoration: BoxDecoration(
+                  color: isTaken
+                      ? AppColors.success.withOpacity(0.1)
+                      : AppColors.danger.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  isTaken ? '✓ Taken' : '✗ Skipped',
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    fontWeight: FontWeight.w600,
+                    color: isTaken ? AppColors.success : AppColors.danger,
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+          ],
+        ),
 
-          // Status icon
-          Icon(statusIcon, color: statusColor, size: 28),
+        // Action buttons — only show if not logged yet
+        if (!isLogged) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              // Taken button
+              Expanded(
+                flex: 2,
+                child: GestureDetector(
+                  onTap: () => _logDose(schedule, 'taken'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'Taken',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // Skip button
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _logDose(schedule, 'skipped'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.cardBorder),
+                    ),
+                    child: const Text(
+                      'Skip',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _buildEmptySchedule() {
     return Container(
@@ -419,31 +553,36 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBottomNav() {
-    return BottomNavigationBar(
-      currentIndex: _currentIndex,
-      onTap: (index) => setState(() => _currentIndex = index),
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home_rounded),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.medication_outlined),
-          activeIcon: Icon(Icons.medication_rounded),
-          label: 'Medications',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.smart_toy_outlined),
-          activeIcon: Icon(Icons.smart_toy_rounded),
-          label: 'AI Chat',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person_rounded),
-          label: 'Profile',
-        ),
-      ],
-    );
-  }
+  return BottomNavigationBar(
+    currentIndex: _currentIndex,
+    onTap: (index) => setState(() => _currentIndex = index),
+    items: const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        activeIcon: Icon(Icons.home_rounded),
+        label: 'Home',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.medication_outlined),
+        activeIcon: Icon(Icons.medication_rounded),
+        label: 'Medications',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.bar_chart_outlined),
+        activeIcon: Icon(Icons.bar_chart_rounded),
+        label: 'Stats',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.smart_toy_outlined),
+        activeIcon: Icon(Icons.smart_toy_rounded),
+        label: 'AI Chat',
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(Icons.person_outline),
+        activeIcon: Icon(Icons.person_rounded),
+        label: 'Profile',
+      ),
+    ],
+  );
+ }
 }
