@@ -1,4 +1,3 @@
-// lib/screens/medications/medications_screen.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
@@ -12,21 +11,58 @@ class MedicationsScreen extends StatefulWidget {
 }
 
 class _MedicationsScreenState extends State<MedicationsScreen> {
-  List<dynamic> _medications = [];
+  List<dynamic> _allMedications = [];
+  List<dynamic> _filteredMedications = [];
   bool _isLoading = true;
+  final _searchController = TextEditingController();
+  String _selectedCategory = 'All';
+
+  List<String> _categories = ['All'];
 
   @override
   void initState() {
     super.initState();
     _loadMedications();
+    _searchController.addListener(_applyFilters);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_applyFilters);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _applyFilters() {
+    final query = _searchController.text.toLowerCase().trim();
+    setState(() {
+      _filteredMedications = _allMedications.where((med) {
+        final matchesSearch = query.isEmpty ||
+            (med['name']?.toString().toLowerCase().contains(query) ?? false) ||
+            (med['category']?.toString().toLowerCase().contains(query) ??
+                false);
+        final matchesCategory = _selectedCategory == 'All' ||
+            med['category'] == _selectedCategory;
+        return matchesSearch && matchesCategory;
+      }).toList();
+    });
   }
 
   Future<void> _loadMedications() async {
     try {
       final response = await ApiService.getMedications();
       if (response['status'] == 'success') {
+        final meds = response['data']['medications'] as List;
+        final cats = meds
+            .map((m) => m['category']?.toString() ?? '')
+            .where((c) => c.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
         setState(() {
-          _medications = response['data']['medications'];
+          _allMedications = meds;
+          _filteredMedications = List.from(meds);
+          _categories = ['All', ...cats];
           _isLoading = false;
         });
       }
@@ -44,8 +80,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
         elevation: 0,
         title: const Text('My Medications'),
         actions: [
-          // Medication count badge
-          if (_medications.isNotEmpty)
+          if (_allMedications.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -54,7 +89,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '${_medications.length} active',
+                '${_filteredMedications.length} of ${_allMedications.length}',
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 12,
@@ -71,14 +106,12 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
           : RefreshIndicator(
               color: AppColors.primary,
               onRefresh: _loadMedications,
-              child: _medications.isEmpty
+              child: _allMedications.isEmpty
                   ? _buildEmpty()
                   : _buildList(),
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Go to add medication screen
-          // When we come back, refresh the list
           await Navigator.push(
             context,
             MaterialPageRoute(
@@ -101,12 +134,118 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
   }
 
   Widget _buildList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: _medications.length,
-      itemBuilder: (context, index) {
-        return _buildMedicationCard(_medications[index]);
-      },
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: _buildSearchAndFilter()),
+        if (_filteredMedications.isEmpty)
+          SliverToBoxAdapter(child: _buildNoResults())
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 80),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) =>
+                    _buildMedicationCard(_filteredMedications[index]),
+                childCount: _filteredMedications.length,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSearchAndFilter() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search medications...',
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: AppColors.textMuted,
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded,
+                          color: AppColors.textMuted),
+                      onPressed: () {
+                        _searchController.clear();
+                      },
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _categories.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final cat = _categories[index];
+                final isSelected = cat == _selectedCategory;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedCategory = cat);
+                    _applyFilters();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.cardBorder,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      cat,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            isSelected ? Colors.white : AppColors.textMuted,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResults() {
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.search_off_rounded,
+                color: AppColors.textMuted, size: 40),
+            const SizedBox(height: 12),
+            const Text(
+              'No medications match your search',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textMuted,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -121,7 +260,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
       ),
       child: Row(
         children: [
-          // Icon
           Container(
             width: 52,
             height: 52,
@@ -135,10 +273,7 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               size: 26,
             ),
           ),
-
           const SizedBox(width: 14),
-
-          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,8 +316,6 @@ class _MedicationsScreenState extends State<MedicationsScreen> {
               ],
             ),
           ),
-
-          // Active indicator
           Column(
             children: [
               Container(
