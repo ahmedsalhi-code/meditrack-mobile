@@ -29,13 +29,15 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
     _controller.forward();
 
@@ -102,11 +104,11 @@ class _SplashScreenState extends State<SplashScreen>
                   children: [
                     // App icon
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: BorderRadius.circular(32),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.15),
@@ -115,10 +117,12 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.medication_rounded,
-                        color: AppColors.primary,
-                        size: 56,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Image.asset(
+                          'assets/icons/app_icon.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
 
@@ -126,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                     // App name
                     const Text(
-                      'MediTrack AI',
+                      'Healfill',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 32,

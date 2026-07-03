@@ -227,7 +227,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // App version
                   Text(
-                    'MediTrack AI v1.0.0',
+                    'Healfill v1.0.0',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],

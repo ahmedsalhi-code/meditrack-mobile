@@ -31,7 +31,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _messages.add({
       'role': 'assistant',
       'content':
-          'Hello! I\'m your MediTrack AI assistant. I can see your medications and adherence data. How can I help you today?',
+          'Hello! I\'m your Healfill assistant. I can see your medications and adherence data. How can I help you today?',
     });
   }
 
@@ -134,7 +134,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'MediTrack AI',
+                  'Healfill',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
