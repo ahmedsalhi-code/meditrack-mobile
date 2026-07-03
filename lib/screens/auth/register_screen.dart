@@ -29,17 +29,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String email) {
+    if (email.isEmpty) return 'Email is required.';
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
+    if (!emailRegex.hasMatch(email)) return 'Enter a valid email address.';
+    return null;
+  }
+
   Future<void> _register() async {
-    // Basic validation
-    if (_firstNameController.text.trim().isEmpty ||
-        _lastNameController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _passwordController.text.isEmpty) {
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (firstName.isEmpty || lastName.isEmpty) {
       setState(() => _errorMessage = 'Please fill in all fields.');
       return;
     }
 
-    if (_passwordController.text.length < 8) {
+    final emailError = _validateEmail(email);
+    if (emailError != null) {
+      setState(() => _errorMessage = emailError);
+      return;
+    }
+
+    if (password.isEmpty) {
+      setState(() => _errorMessage = 'Please fill in all fields.');
+      return;
+    }
+
+    if (password.length < 8) {
       setState(() => _errorMessage = 'Password must be at least 8 characters.');
       return;
     }

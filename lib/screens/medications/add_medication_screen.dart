@@ -60,10 +60,17 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       _errorMessage = null;
     });
 
+    final dosageText = _dosageController.text.trim();
+    final dosage = double.tryParse(dosageText);
+    if (dosage == null) {
+      setState(() => _errorMessage = 'Dosage must be a valid number.');
+      return;
+    }
+
     try {
       final response = await ApiService.createMedication({
         'name': _nameController.text.trim(),
-        'dosage': double.parse(_dosageController.text.trim()),
+        'dosage': dosage,
         'unit': _selectedUnit,
         'form': _selectedForm,
         'category': _selectedCategory,

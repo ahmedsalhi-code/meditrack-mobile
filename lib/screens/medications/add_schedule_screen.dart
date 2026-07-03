@@ -1,7 +1,7 @@
-// lib/screens/medications/add_schedule_screen.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
+import '../../services/notification_service.dart';
 
 class AddScheduleScreen extends StatefulWidget {
   final String medicationId;
@@ -94,10 +94,20 @@ class _AddScheduleScreenState extends State<AddScheduleScreen> {
       );
 
       if (response['status'] == 'success') {
+        final timesJson = _times.map(_formatTime).toList();
+        final dosage = widget.medicationName;
+
+        await NotificationService.instance.scheduleForTimes(
+          baseId: widget.medicationId.hashCode,
+          medicationName: widget.medicationName,
+          dosage: dosage,
+          times: timesJson,
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Schedule created successfully'),
+              content: Text('Schedule created with reminders'),
               backgroundColor: AppColors.success,
             ),
           );

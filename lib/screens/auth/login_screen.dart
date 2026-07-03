@@ -26,7 +26,25 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  String? _validateEmail(String email) {
+    if (email.isEmpty) return 'Email is required.';
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$');
+    if (!emailRegex.hasMatch(email)) return 'Enter a valid email address.';
+    return null;
+  }
+
   Future<void> _login() async {
+    final emailError = _validateEmail(_emailController.text.trim());
+    if (emailError != null) {
+      setState(() => _errorMessage = emailError);
+      return;
+    }
+
+    if (_passwordController.text.isEmpty) {
+      setState(() => _errorMessage = 'Password is required.');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;

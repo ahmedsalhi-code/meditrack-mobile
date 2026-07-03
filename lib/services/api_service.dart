@@ -1,11 +1,10 @@
-// lib/services/api_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config/app_config.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'https://meditrack-backend-production-1b17.up.railway.app';
+  static String get baseUrl => AppConfig.apiBaseUrl;
 
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
 

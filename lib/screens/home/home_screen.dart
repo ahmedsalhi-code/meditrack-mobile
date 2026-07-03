@@ -1,7 +1,7 @@
-// lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/api_service.dart';
+import '../../services/notification_service.dart';
 import '../auth/login_screen.dart';
 import '../medications/medications_screen.dart';
 import '../ai/ai_chat_screen.dart';
@@ -42,8 +42,38 @@ class _HomeScreenState extends State<HomeScreen> {
         _userName = results[2]['data']['user']['first_name'];
         _isLoading = false;
       });
+
+      _rescheduleNotifications(results[0]['data']);
     } catch (e) {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _rescheduleNotifications(Map<String, dynamic>? todayData) async {
+    final schedules = todayData?['schedules'] as List? ?? [];
+    for (final schedule in schedules) {
+      if (schedule['action'] != null) continue;
+
+      final medName = schedule['medication_name'] ?? 'Medication';
+      final dosage = '${schedule['dosage']} ${schedule['unit'] ?? ''}';
+      final timeStr = schedule['scheduled_time'] as String?;
+      if (timeStr == null) continue;
+
+      final parts = timeStr.split(':');
+      if (parts.length == 2) {
+        final hour = int.tryParse(parts[0]) ?? 8;
+        final minute = int.tryParse(parts[1]) ?? 0;
+        final medId = schedule['medication_id']?.hashCode ?? 0;
+        final schedIdx = schedules.indexOf(schedule);
+
+        await NotificationService.instance.scheduleDailyReminder(
+          id: medId + schedIdx,
+          medicationName: medName,
+          dosage: dosage,
+          hour: hour,
+          minute: minute,
+        );
+      }
     }
   }
   Future<void> _logDose(
