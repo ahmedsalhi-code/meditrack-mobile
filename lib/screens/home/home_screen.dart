@@ -573,15 +573,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPlaceholder(String name) {
-    return Center(
-      child: Text(
-        '$name — coming soon',
-        style: Theme.of(context).textTheme.titleMedium,
-      ),
-    );
-  }
-
   Widget _buildBottomNav() {
   return BottomNavigationBar(
     currentIndex: _currentIndex,

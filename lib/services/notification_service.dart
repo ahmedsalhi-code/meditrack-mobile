@@ -14,8 +14,6 @@ class NotificationService {
   static const String _channelName = 'Medication Reminders';
   static const String _channelDesc = 'Reminders for your medications';
 
-  int _notificationId = 1000;
-
   Future<void> init() async {
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
