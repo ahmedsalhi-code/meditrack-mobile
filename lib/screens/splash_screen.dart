@@ -1,4 +1,6 @@
 // lib/screens/splash_screen.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +21,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -42,7 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Navigate after 2.5 seconds
-    Future.delayed(const Duration(milliseconds: 2500), () {
+    _navigationTimer = Timer(const Duration(milliseconds: 2500), () {
       _navigate();
     });
   }
@@ -83,6 +86,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    _navigationTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -111,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(32),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 30,
                             offset: const Offset(0, 10),
                           ),
@@ -145,7 +149,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'Your medication companion',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 16,
                         fontWeight: FontWeight.w400,
                       ),
@@ -158,7 +162,7 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         strokeWidth: 2,
                       ),
                     ),

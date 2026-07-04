@@ -241,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           CircularProgressIndicator(
                             value: adherence / 100,
                             strokeWidth: 8,
-                            backgroundColor: Colors.white.withOpacity(0.3),
+                            backgroundColor: Colors.white.withValues(alpha: 0.3),
                             valueColor: const AlwaysStoppedAnimation<Color>(
                               Colors.white,
                             ),
@@ -279,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             '$takenDoses of $totalDoses doses taken',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 13,
                             ),
                           ),
@@ -287,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Text(
                             '🔥 $streak day streak',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: 13,
                             ),
                           ),
@@ -390,9 +390,9 @@ class _HomeScreenState extends State<HomeScreen> {
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
         color: isTaken
-            ? AppColors.success.withOpacity(0.3)
+            ? AppColors.success.withValues(alpha: 0.3)
             : isMissed
-                ? AppColors.danger.withOpacity(0.3)
+                ? AppColors.danger.withValues(alpha: 0.3)
                 : AppColors.cardBorder,
       ),
     ),
@@ -406,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 44,
               decoration: BoxDecoration(
                 color: isTaken
-                    ? AppColors.success.withOpacity(0.1)
+                    ? AppColors.success.withValues(alpha: 0.1)
                     : AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -453,8 +453,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isTaken
-                      ? AppColors.success.withOpacity(0.1)
-                      : AppColors.danger.withOpacity(0.1),
+                      ? AppColors.success.withValues(alpha: 0.1)
+                      : AppColors.danger.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

@@ -98,7 +98,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
       setState(() {
         _messages.add({
           'role': 'assistant',
-          'content': 'Connection error. Please check your internet and try again.',
+          'content': ApiService.messageFromError(e),
         });
         _isTyping = false;
       });
@@ -163,7 +163,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               horizontal: 16,
               vertical: 8,
             ),
-            color: AppColors.warning.withOpacity(0.1),
+            color: AppColors.warning.withValues(alpha: 0.1),
             child: Row(
               children: [
                 const Icon(
@@ -177,7 +177,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                     'For informational purposes only. Always consult your doctor.',
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppColors.warning.withOpacity(0.8),
+                      color: AppColors.warning.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -332,7 +332,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.3 + (value * 0.7)),
+            color: AppColors.primary.withValues(alpha: 0.3 + (value * 0.7)),
             shape: BoxShape.circle,
           ),
         );
@@ -357,7 +357,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 suggestion,

@@ -201,7 +201,7 @@ class _AdherenceScreenState extends State<AdherenceScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -445,8 +445,11 @@ class _AdherenceScreenState extends State<AdherenceScreen> {
         0;
 
     Color color = AppColors.success;
-    if (percentage < 50) color = AppColors.danger;
-    else if (percentage < 80) color = AppColors.warning;
+    if (percentage < 50) {
+      color = AppColors.danger;
+    } else if (percentage < 80) {
+      color = AppColors.warning;
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -593,8 +596,8 @@ class _AdherenceScreenState extends State<AdherenceScreen> {
             ),
             decoration: BoxDecoration(
               color: isTaken
-                  ? AppColors.success.withOpacity(0.1)
-                  : AppColors.danger.withOpacity(0.1),
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : AppColors.danger.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(

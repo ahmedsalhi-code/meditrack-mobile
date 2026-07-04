@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
@@ -13,6 +14,7 @@ class NotificationService {
   static const String _channelId = 'medication_reminders';
   static const String _channelName = 'Medication Reminders';
   static const String _channelDesc = 'Reminders for your medications';
+  static const String _remindersEnabledKey = 'reminders_enabled';
 
   Future<void> init() async {
     const androidSettings =
@@ -46,6 +48,10 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
+    if (!await areRemindersEnabled()) {
+      return id;
+    }
+
     final now = DateTime.now();
     final scheduledDate = DateTime(now.year, now.month, now.day, hour, minute);
     final tzScheduledDate = tz.TZDateTime.from(
@@ -93,6 +99,10 @@ class NotificationService {
     required String dosage,
     required List<String> times,
   }) async {
+    if (!await areRemindersEnabled()) {
+      return;
+    }
+
     for (int i = 0; i < times.length; i++) {
       final parts = times[i].split(':');
       if (parts.length == 2) {
@@ -114,7 +124,30 @@ class NotificationService {
     await _plugin.cancel(id);
   }
 
+  Future<void> cancelForTimes({
+    required int baseId,
+    required int count,
+  }) async {
+    for (int i = 0; i < count; i++) {
+      await _plugin.cancel(baseId + i);
+    }
+  }
+
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+  }
+
+  Future<bool> areRemindersEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_remindersEnabledKey) ?? true;
+  }
+
+  Future<void> setRemindersEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_remindersEnabledKey, enabled);
+
+    if (!enabled) {
+      await cancelAll();
+    }
   }
 }
